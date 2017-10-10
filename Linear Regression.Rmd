@@ -1,0 +1,158 @@
+---
+title: "Linear_Regression"
+author: "Cathy Kiriakos"
+date: "October 3, 2017"
+output: html_document
+---
+
+```{r read_data}
+#Read Data Sets: 
+states.data <- readRDS("C:\\Users\\kiriakosc\\Documents\\R\\linear_regression\\dataSets/states.rds")
+```
+
+```{r get_labels}
+#get labels
+states.info <- data.frame(attributes(states.data)[c("names", "var.labels")])
+```
+
+```{r look@data}
+#look at last few labels
+tail(states.info, 8)
+
+```
+
+```{r summarize_Exp_CSAT}
+# summary of expense and csat columns, all rows
+sts.ex.sat <- subset(states.data, select = c("expense", "csat"))
+summary(sts.ex.sat)
+# correlation between expense and csat
+cor(sts.ex.sat) 
+```
+
+```{r Plot}
+# scatter plot of expense vs csat
+plot(sts.ex.sat)
+```
+
+```{r fit_regression}
+# Fit our regression model
+sat.mod <- lm(csat ~ expense, # regression formula
+              data=states.data) # data set
+# Summarize and print the results
+summary(sat.mod) # show regression coefficients table
+```
+
+```{r Summarize Expense + Percent}
+#Why is the association between expense and SAT scores negative?
+summary(lm(csat ~ expense + percent, data = states.data))
+```
+
+```{r fit_model}
+#The lm class and methods. OK, we fit our model. Now what? Examine the model 
+class(sat.mod)
+names(sat.mod)
+methods(class = class(sat.mod))[1:9]
+```
+```{r function_methods}
+#Use function methods to get more information about the fit
+confint(sat.mod)
+# hist(residuals(sat.mod))
+```
+
+```{r LSR_Plot}
+#Linear Regression Assumptions: Ordinary least squares regression relies on several assumptions, including that the residuals are normally distributed and homoscedastic, the errors are independent and the relationships are linear. Investigate these assumptions visually by plotting your model:
+
+par(mar = c(4, 4, 2, 2), mfrow = c(1, 2)) #optional
+plot(sat.mod, which = c(1, 2)) # "which" argument optional
+```
+
+```{r Comp_Models}
+#Comparing models. Do congressional voting patterns predict SAT scores over and above expense? Fit two models and compare them:
+# fit another model, adding house and senate as predictors
+sat.voting.mod <-  lm(csat ~ expense + house + senate,
+                      data = na.omit(states.data))
+sat.mod <- update(sat.mod, data=na.omit(states.data))
+# compare using the anova() function
+anova(sat.mod, sat.voting.mod)
+coef(summary(sat.voting.mod))
+```
+
+```{r LSR}
+## Exercise: least squares regression
+## ────────────────────────────────────────
+##   Use the /states.rds/ data set. Fit a model predicting energy consumed - This is the states dta file - load foreign package to pull data set
+install.packages("foreign")
+```
+
+```{r read_DTRFile}
+library(foreign)
+require(foreign)
+```
+```{r Read_States}
+#Read States DTA File
+states <- read.dta("C:\\Users\\kiriakosc\\Documents\\R\\linear_regression\\dataSets/states.dta")
+```
+
+```{r View_States}
+##   per capita (energy) from the percentage of residents living in
+##   metropolitan areas (metro). Be sure to
+##   1. Examine/plot the data before fitting the model
+head(states)
+```
+
+```{r Summary_Energy&Metro}
+#Summary of energy & metro columns, all rows 
+states.en.met <- subset(states, select = c("metro", "energy"))
+summary(states.en.met)
+#Correlation between metro & energy 
+cor(states.en.met, use="pairwise")
+```
+
+```{r print_model}
+##   2. Print and interpret the model `summary'
+mod.en.met <- lm(energy ~ metro, data = states)
+summary(mod.en.met)
+```
+
+```{r plot_model}
+##   3. `plot' the model to look for deviations from modeling assumptions
+plot(mod.en.met)
+```
+
+```{r add_predictors}
+##   Select one or more additional predictors to add to your model:
+states.en.met.pop.wst <- subset(states, select = c("energy", "metro", "pop", "waste"))
+summary(states.en.met.pop.wst)
+
+```
+
+```{r print_interpret_model}
+## Print and interpret the model summary:
+plot(states.en.met.pop.wst)
+```
+
+```{r view_correlation}
+#Correlation
+cor(states.en.met.pop.wst, use = "pairwise")
+```
+
+```{r add_predictors}
+#Select one or more additional predictors to add to your model and repeat steps 1-3. Is this model significantly better than the model with metro as the only predictor?
+
+mod.en.met.pop.waste <- lm(energy ~ metro + pop + waste, data = states)
+summary(mod.en.met.pop.waste)
+anova(mod.en.met, mod.en.met.pop.waste)
+```
+
+```{r add_interaction}
+#Use the states data set. Add on to the regression equation that you created in exercise 1 by generating an interaction term and testing the interaction.
+mod.en.metro.by.waste <- lm(energy ~ metro * waste, data = states)
+```
+
+```{r add_region}
+# Try adding a region to the model. Are there significant differences across the four regions?
+mod.en.region <- lm(energy ~ metro * waste + region, data = states)
+anova(mod.en.region)
+```
+
+
